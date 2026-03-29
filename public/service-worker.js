@@ -3,30 +3,30 @@
    Estratégia: Cache-First / Offline-First
    ============================================================ */
 
-const CACHE_NAME = 'sparks-lider-v1';
+// Mudamos para v2 para forçar a atualização no navegador
+const CACHE_NAME = 'sparks-lider-v2';
 
-/* Arquivos que serão cacheados na instalação */
+/* Arquivos corrigidos para a nova estrutura da pasta /public/ */
 const STATIC_ASSETS = [
-  '.',
-  './index.html',
-  './style.css',
-  './app.js',
-  './data/frases.json',
-  './manifest.json',
-  './config/theme.json',
-  './config/app.json',
-  './icons/icon-192.png',
-  './icons/icon-512.png'
+  '/',
+  'index.html',
+  'style.css',
+  'app.js',
+  'frases.json',
+  'manifest.json',
+  'icon-192.png',
+  'icon-512.png',
+  'spks-welcome.png'
 ];
 
 /* ── Instalação: pré-cache dos arquivos estáticos ── */
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
+      // O cache.addAll agora vai encontrar todos os arquivos na raiz
       return cache.addAll(STATIC_ASSETS);
     })
   );
-  /* Força ativação imediata sem esperar a aba fechar */
   self.skipWaiting();
 });
 
@@ -46,7 +46,6 @@ self.addEventListener('activate', (event) => {
 
 /* ── Fetch: Cache-First, fallback para rede ── */
 self.addEventListener('fetch', (event) => {
-  /* Ignora requisições que não sejam GET */
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
@@ -54,7 +53,6 @@ self.addEventListener('fetch', (event) => {
       if (cached) {
         return cached;
       }
-      /* Tenta buscar na rede e cacheia a resposta */
       return fetch(event.request)
         .then((networkResponse) => {
           if (
@@ -70,9 +68,8 @@ self.addEventListener('fetch', (event) => {
           return networkResponse;
         })
         .catch(() => {
-          /* Fallback: retorna index.html para navegação offline */
           if (event.request.destination === 'document') {
-            return caches.match('./index.html');
+            return caches.match('index.html');
           }
         });
     })
